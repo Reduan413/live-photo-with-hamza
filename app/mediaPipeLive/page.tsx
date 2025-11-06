@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import FaceMeshLib from "@mediapipe/face_mesh";
 import NextImage from "next/image";
+import { useEffect, useRef, useState } from "react";
 
 export default function FaceMeshCamera() {
   const mainDivRef = useRef<HTMLDivElement>(null);
@@ -224,7 +224,7 @@ export default function FaceMeshCamera() {
               autoPlay
             />
             <NextImage
-              src="https://res.cloudinary.com/ds95mo5gr/image/upload/v1762236779/main_large_bxrcg2.png"
+              src="https://res.cloudinary.com/ds95mo5gr/image/upload/v1762441925/2_pqjbj0.png"
               alt="Overlay"
               fill
               className="absolute top-0 left-0 w-full h-full pointer-events-none"
@@ -271,14 +271,14 @@ export default function FaceMeshCamera() {
         {croppedFace && (
           <div className=" relative border border-gray-300 w-[95%] lg:w-[400px] h-[80vh]">
             <img
-              src="https://res.cloudinary.com/ds95mo5gr/image/upload/v1762236779/main_large_bxrcg2.png"
+              src="https://res.cloudinary.com/ds95mo5gr/image/upload/v1762441925/2_pqjbj0.png"
               alt="Overlay"
               className="w-full h-full"
             />
             <img
               src={croppedFace}
               alt="Cropped Face"
-              className="absolute top-[46.5%] left-[14%] w-[28%] rounded-lg shadow-md -z-30"
+              className="absolute top-[45%] left-[15%] w-[28%] rounded-lg shadow-md -z-30"
             />
           </div>
         )}
