@@ -4,6 +4,7 @@
 import NextImage from "next/image";
 import { useEffect, useRef, useState } from "react";
 import * as tf from "@tensorflow/tfjs";
+import Image from "next/image";
 
 // ----- Tone matrix (example: warm tone) -----
 const TONE_MATRIX = [
@@ -14,7 +15,7 @@ const TONE_MATRIX = [
 const TONE_BIAS = [6, 2, -8]; // tweak tone
 
 // ---- zoom constants for software (no hardware zoom support) ----
-const SOFTWARE_DEFAULT_SCALE = 0.9; // 0.70x by default
+const SOFTWARE_DEFAULT_SCALE = 1; // 0.70x by default
 // negative zoom value so cssScale = |1/zoom| = 0.7
 const SOFTWARE_DEFAULT_ZOOM = -1 / SOFTWARE_DEFAULT_SCALE; // ≈ -1.42857
 
@@ -273,11 +274,11 @@ export default function Home() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6">
       <div className="flex flex-wrap lg:gap-10 justify-center w-full">
-        <div className="w-[390px] aspect-9/16 border-2 border-red-600 flex flex-col">
+        <div className="w-[390px] aspect-9/16   relative">
           {/* Camera container */}
           <div
             ref={mainDivRef}
-            className="relative flex-1 overflow-hidden rounded-xl bg-black"
+            className="relative w-full h-full overflow-hidden rounded-xl bg-black"
           >
             <video
               ref={videoRef}
@@ -300,46 +301,59 @@ export default function Home() {
             />
           </div>
 
-          {/* Zoom slider (progress bar) */}
-          {zoomRange.max > zoomRange.min && (
-            <div className="mt-4 w-full flex flex-col items-center gap-2">
-              <label className="text-sm text-gray-300">
-                Zoom: {displayZoom.toFixed(2)}x{" "}
-                {!supportsHardwareZoom && "(software zoom-out for webcam)"}
-              </label>
-              <input
-                type="range"
-                min={zoomRange.min}
-                max={zoomRange.max}
-                step={zoomRange.step}
-                value={zoom}
-                onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
-                className="w-3/4 accent-green-500"
-              />
-            </div>
-          )}
-
           {/* Buttons */}
-          <div className="flex flex-wrap mt-4 gap-3 border-2 border-blue-600">
-            <button
-              onClick={capturePhoto}
-              disabled={!streaming}
-              className="bg-green-600 hover:bg-green-700 px-5 py-3 rounded-xl text-white font-semibold disabled:opacity-50"
-            >
-              Capture Photo
-            </button>
-            <button
-              onClick={toggleCamera}
-              className="bg-purple-600 hover:bg-purple-700 px-5 py-3 rounded-xl text-white font-semibold"
-            >
-              Switch to {useFrontCamera ? "Back" : "Front"} Camera
-            </button>
-            <button
-              onClick={stopCamera}
-              className="bg-red-600 hover:bg-red-700 px-5 py-3 rounded-xl text-white font-semibold"
-            >
-              Stop Camera
-            </button>
+          <div className="flex flex-wrap mt-4 gap-3  absolute bottom-0 left-0 w-full">
+            {/* Zoom slider (progress bar) */}
+            {zoomRange.max > zoomRange.min && (
+              <div className="mt-4 w-full flex flex-col items-center gap-2">
+                {/* <label className="text-sm text-gray-300">
+                  Zoom: {displayZoom.toFixed(2)}x{" "}
+                  {!supportsHardwareZoom && "(software zoom-out for webcam)"}
+                </label> */}
+                <input
+                  type="range"
+                  min={zoomRange.min}
+                  max={zoomRange.max}
+                  step={zoomRange.step}
+                  value={zoom}
+                  onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
+                  className="w-3/4 accent-[#e91e58]"
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-3 justify-between items-center bg-gray-300 w-full py-3 mt-6 rounded-t-xl">
+              <div className="flex justify-center items-center">
+                <button
+                  onClick={toggleCamera}
+                  className=" w-fit mx-auto cursor-pointer"
+                >
+                  <Image
+                    src={
+                      "https://res.cloudinary.com/ds95mo5gr/image/upload/v1762675228/570-5707950_camera-symbol-png-camera-change-icon-png-transparent-removebg-preview_wstsrn.png"
+                    }
+                    alt=""
+                    width={500}
+                    height={500}
+                    className="w-5 h-5 mx-auto"
+                  />
+                </button>
+              </div>
+              <div className=" relative">
+                <button
+                  onClick={capturePhoto}
+                  disabled={!streaming}
+                  className="bg-[#D12053] hover:bg-[#e91e58] rounded-full border-4 border-gray-400 text-white font-semibold disabled:opacity-50 w-16 h-16  absolute left-0 right-0 mx-auto -top-14 cursor-pointer"
+                ></button>
+              </div>
+              <div className=" flex justify-center items-center">
+                <button
+                  onClick={stopCamera}
+                  className="bg-red-600 hover:bg-red-700  rounded-full  text-white font-semibol w-6 h-6 text-center  cursor-pointer"
+                >
+                   X
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
