@@ -196,7 +196,7 @@ export default function Home() {
     const frame = new window.Image();
     frame.crossOrigin = "anonymous";
     frame.src =
-      "https://res.cloudinary.com/ds95mo5gr/image/upload/v1762441756/3_wvtbds.png";
+      "https://res.cloudinary.com/ds95mo5gr/image/upload/v1762681907/WhatsApp_Image_2025-11-09_at_15.37.21_53305957_jtdygz.png";
 
     await new Promise<void>((resolve) => {
       frame.onload = () => resolve();
@@ -252,7 +252,7 @@ export default function Home() {
                 }}
               />
               <NextImage
-                src="https://res.cloudinary.com/ds95mo5gr/image/upload/v1762441756/3_wvtbds.png"
+                src="https://res.cloudinary.com/ds95mo5gr/image/upload/v1762681907/WhatsApp_Image_2025-11-09_at_15.37.21_53305957_jtdygz.png"
                 alt="Overlay"
                 fill
                 className="absolute top-0 left-0 w-full h-full pointer-events-none"
