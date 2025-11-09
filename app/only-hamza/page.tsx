@@ -3,6 +3,15 @@
 
 import NextImage from "next/image";
 import { useEffect, useRef, useState } from "react";
+import * as tf from "@tensorflow/tfjs";
+
+// ----- Tone matrix (example: warm tone) -----
+const TONE_MATRIX = [
+  [1.05, 0.02, 0.0],
+  [0.01, 1.0, 0.0],
+  [0.0, 0.03, 0.95],
+];
+const TONE_BIAS = [6, 2, -8]; // tweak tone
 
 // ---- zoom constants for software (no hardware zoom support) ----
 const SOFTWARE_DEFAULT_SCALE = 0.9; // 0.70x by default
@@ -76,10 +85,10 @@ export default function Home() {
       //   const settings = videoTrack.getSettings();
       //   setZoom(settings.zoom ?? min ?? 1); // hardware zoom value
       // } else {
-        // ❌ No hardware zoom – use CSS zoom fallback (zoom OUT via negative values)
-        setSupportsHardwareZoom(false);
-        setZoomRange({ min: -4, max: -1, step: 0.1 }); // allow -1x to -4x
-        setZoom(SOFTWARE_DEFAULT_ZOOM); // default ~0.70x scale
+      // ❌ No hardware zoom – use CSS zoom fallback (zoom OUT via negative values)
+      setSupportsHardwareZoom(false);
+      setZoomRange({ min: -4, max: -1, step: 0.1 }); // allow -1x to -4x
+      setZoom(SOFTWARE_DEFAULT_ZOOM); // default ~0.70x scale
       // }
     } catch (err) {
       console.error(err);
@@ -158,32 +167,31 @@ export default function Home() {
     let dy: number;
 
     if (videoRatio > containerRatio) {
-      // video is wider than container
       drawHeight = height;
       drawWidth = height * videoRatio;
       dx = (width - drawWidth) / 2;
       dy = 0;
     } else {
-      // video is taller than container
       drawWidth = width;
       drawHeight = width / videoRatio;
       dx = 0;
       dy = (height - drawHeight) / 2;
     }
 
-    // ✅ If hardware zoom is NOT supported, we simulate zoom OUT in the capture
+    // ✅ Handle zoom
     const effectiveZoom = supportsHardwareZoom ? 1 : Math.abs(1 / zoom);
     const zoomedWidth = drawWidth * effectiveZoom;
     const zoomedHeight = drawHeight * effectiveZoom;
     const zoomDx = dx - (zoomedWidth - drawWidth) / 2;
     const zoomDy = dy - (zoomedHeight - drawHeight) / 2;
 
-    // Mirror if using front camera
+    // ✅ Mirror if using front camera
     if (useFrontCamera) {
       ctx.translate(width, 0);
       ctx.scale(-1, 1);
     }
 
+    // Draw the raw frame first
     ctx.drawImage(video, zoomDx, zoomDy, zoomedWidth, zoomedHeight);
 
     // Reset transform so overlay isn't flipped
@@ -191,11 +199,50 @@ export default function Home() {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
 
-    // Draw overlay frame
+    // ====== 🎨 APPLY TENSORFLOW COLOR TONE ======
+    const imageTensor = tf.browser.fromPixels(canvas);
+    const [h, w] = imageTensor.shape.slice(0, 2);
+
+    const matrix = tf.tensor2d(
+      [
+        TONE_MATRIX[0][0],
+        TONE_MATRIX[0][1],
+        TONE_MATRIX[0][2],
+        TONE_MATRIX[1][0],
+        TONE_MATRIX[1][1],
+        TONE_MATRIX[1][2],
+        TONE_MATRIX[2][0],
+        TONE_MATRIX[2][1],
+        TONE_MATRIX[2][2],
+      ],
+      [3, 3]
+    );
+
+    const matrixT = tf.transpose(matrix);
+    const flat = tf.reshape(imageTensor, [h * w, 3]);
+    const out = tf.matMul(flat, matrixT).add(tf.tensor1d(TONE_BIAS));
+    const clipped = tf.clipByValue(out, 0, 255);
+    const toned = tf.reshape(clipped, [h, w, 3]);
+    const normalized = toned.div(255);
+    const tonedPixels = await tf.browser.toPixels(normalized as tf.Tensor3D);
+
+    // @ts-expect-error  ignoring error
+    const tonedData = new ImageData(tonedPixels, w, h);
+    ctx.putImageData(tonedData, 0, 0);
+
+    imageTensor.dispose();
+    matrix.dispose();
+    matrixT.dispose();
+    flat.dispose();
+    out.dispose();
+    clipped.dispose();
+    toned.dispose();
+
+    // ====== 🖼️ Draw overlay frame ======
     const frame = new window.Image();
     frame.crossOrigin = "anonymous";
     frame.src =
-      "https://res.cloudinary.com/ds95mo5gr/image/upload/v1762431140/Hamza3_gtxcbh.png";
+      "https://res.cloudinary.com/ds95mo5gr/image/upload/v1762673084/bkash_nlmwaq.png";
 
     await new Promise<void>((resolve) => {
       frame.onload = () => resolve();
@@ -203,10 +250,9 @@ export default function Home() {
 
     ctx.drawImage(frame, 0, 0, width, height);
 
-    // Export photo
+    // Export toned + overlayed image
     setPhoto(canvas.toDataURL("image/png"));
   };
-
   // ✅ Start camera on mount / camera toggle
   useEffect(() => {
     startCamera();
@@ -227,15 +273,11 @@ export default function Home() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6">
       <div className="flex flex-wrap lg:gap-10 justify-center w-full">
-        <div className="w-full lg:w-[500px]">
-          <h1 className="text-2xl font-bold mb-6 text-center">
-            📸 Live Camera Capture (Zoom In / Out)
-          </h1>
-
+        <div className="w-[390px] aspect-9/16 border-2 border-red-600 flex flex-col">
           {/* Camera container */}
           <div
             ref={mainDivRef}
-            className="relative w-full lg:w-[400px] h-[80vh] overflow-hidden rounded-xl bg-black"
+            className="relative flex-1 overflow-hidden rounded-xl bg-black"
           >
             <video
               ref={videoRef}
@@ -251,10 +293,10 @@ export default function Home() {
               }}
             />
             <NextImage
-              src="https://res.cloudinary.com/ds95mo5gr/image/upload/v1762431140/Hamza3_gtxcbh.png"
+              src="https://res.cloudinary.com/ds95mo5gr/image/upload/v1762673084/bkash_nlmwaq.png"
               alt="Overlay"
               fill
-              className="absolute top-0 left-0 w-full h-full pointer-events-none"
+              className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
             />
           </div>
 
@@ -278,7 +320,7 @@ export default function Home() {
           )}
 
           {/* Buttons */}
-          <div className="flex flex-col items-center mt-4 gap-3">
+          <div className="flex flex-wrap mt-4 gap-3 border-2 border-blue-600">
             <button
               onClick={capturePhoto}
               disabled={!streaming}
@@ -303,7 +345,7 @@ export default function Home() {
 
         {/* Captured Photo Preview */}
         {photo && (
-          <div className="mt-6 text-center w-[95%] lg:w-[400px] h-[80vh]">
+          <div className="mt-6 text-center w-[390px] aspect-9/16">
             <h3 className="font-semibold mb-2">Captured Frame:</h3>
             <img
               src={photo}
