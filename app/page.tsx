@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import Image from "next/image";
 import NextImage from "next/image";
 import { useEffect, useRef, useState } from "react";
 
@@ -76,10 +77,10 @@ export default function Home() {
       //   const settings = videoTrack.getSettings();
       //   setZoom(settings.zoom ?? min ?? 1); // hardware zoom value
       // } else {
-        // ❌ No hardware zoom – use CSS zoom fallback (zoom OUT via negative values)
-        setSupportsHardwareZoom(false);
-        setZoomRange({ min: -4, max: -1, step: 0.1 }); // allow -1x to -4x
-        setZoom(SOFTWARE_DEFAULT_ZOOM); // default ~0.70x scale
+      // ❌ No hardware zoom – use CSS zoom fallback (zoom OUT via negative values)
+      setSupportsHardwareZoom(false);
+      setZoomRange({ min: -4, max: -1, step: 0.1 }); // allow -1x to -4x
+      setZoom(SOFTWARE_DEFAULT_ZOOM); // default ~0.70x scale
       // }
     } catch (err) {
       console.error(err);
@@ -231,79 +232,95 @@ export default function Home() {
           <h1 className="text-2xl font-bold mb-6 text-center">
             📸 Live Camera Capture (Zoom In / Out)
           </h1>
-
-          {/* Camera container */}
-          <div
-            ref={mainDivRef}
-            className="relative w-full lg:w-[400px] h-[80vh] overflow-hidden rounded-xl bg-black"
-          >
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-500 ${
-                streaming ? "opacity-100" : "opacity-30"
-              }`}
-              style={{
-                transform: videoTransform,
-                transformOrigin: "center center",
-              }}
-            />
-            <NextImage
-              src="https://res.cloudinary.com/ds95mo5gr/image/upload/v1762441756/3_wvtbds.png"
-              alt="Overlay"
-              fill
-              className="absolute top-0 left-0 w-full h-full pointer-events-none"
-            />
-          </div>
-
-          {/* Zoom slider (progress bar) */}
-          {zoomRange.max > zoomRange.min && (
-            <div className="mt-4 w-full flex flex-col items-center gap-2">
-              <label className="text-sm text-gray-300">
-                Zoom: {displayZoom.toFixed(2)}x{" "}
-                {!supportsHardwareZoom && "(software zoom-out for webcam)"}
-              </label>
-              <input
-                type="range"
-                min={zoomRange.min}
-                max={zoomRange.max}
-                step={zoomRange.step}
-                value={zoom}
-                onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
-                className="w-3/4 accent-green-500"
+          <div className="w-[390px] aspect-9/16   relative">
+            {/* Camera container */}
+            <div
+              ref={mainDivRef}
+              className="relative w-full h-full overflow-hidden rounded-xl bg-black"
+            >
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-500 ${
+                  streaming ? "opacity-100" : "opacity-30"
+                }`}
+                style={{
+                  transform: videoTransform,
+                  transformOrigin: "center center",
+                }}
+              />
+              <NextImage
+                src="https://res.cloudinary.com/ds95mo5gr/image/upload/v1762441756/3_wvtbds.png"
+                alt="Overlay"
+                fill
+                className="absolute top-0 left-0 w-full h-full pointer-events-none"
               />
             </div>
-          )}
-
-          {/* Buttons */}
-          <div className="flex flex-col items-center mt-4 gap-3">
-            <button
-              onClick={capturePhoto}
-              disabled={!streaming}
-              className="bg-green-600 hover:bg-green-700 px-5 py-3 rounded-xl text-white font-semibold disabled:opacity-50"
-            >
-              Capture Photo
-            </button>
-            <button
-              onClick={toggleCamera}
-              className="bg-purple-600 hover:bg-purple-700 px-5 py-3 rounded-xl text-white font-semibold"
-            >
-              Switch to {useFrontCamera ? "Back" : "Front"} Camera
-            </button>
-            <button
-              onClick={stopCamera}
-              className="bg-red-600 hover:bg-red-700 px-5 py-3 rounded-xl text-white font-semibold"
-            >
-              Stop Camera
-            </button>
+            {/* Buttons */}
+            <div className="flex flex-wrap mt-4 gap-3  absolute bottom-0 left-0 w-full">
+              {/* Zoom slider (progress bar) */}
+              {zoomRange.max > zoomRange.min && (
+                <div className="mt-4 w-full flex flex-col items-center gap-2">
+                  {/* <label className="text-sm text-gray-300">
+                         Zoom: {displayZoom.toFixed(2)}x{" "}
+                         {!supportsHardwareZoom && "(software zoom-out for webcam)"}
+                       </label> */}
+                  <input
+                    type="range"
+                    min={zoomRange.min}
+                    max={zoomRange.max}
+                    step={zoomRange.step}
+                    value={zoom}
+                    onChange={(e) =>
+                      handleZoomChange(parseFloat(e.target.value))
+                    }
+                    className="w-3/4 accent-[#e91e58]"
+                  />
+                </div>
+              )}
+              <div className="grid grid-cols-3 justify-between items-center bg-gray-300 w-full py-3 mt-6 rounded-t-xl">
+                <div className="flex justify-center items-center">
+                  <button
+                    onClick={toggleCamera}
+                    className=" w-fit mx-auto cursor-pointer"
+                  >
+                    <Image
+                      src={
+                        "https://res.cloudinary.com/ds95mo5gr/image/upload/v1762675228/570-5707950_camera-symbol-png-camera-change-icon-png-transparent-removebg-preview_wstsrn.png"
+                      }
+                      alt=""
+                      width={500}
+                      height={500}
+                      className="w-5 h-5 mx-auto"
+                    />
+                  </button>
+                </div>
+                <div className=" relative">
+                  <button
+                    onClick={capturePhoto}
+                    disabled={!streaming}
+                    className="bg-[#D12053] hover:bg-[#e91e58] rounded-full border-4 border-gray-400 text-white font-semibold disabled:opacity-50 w-16 h-16  absolute left-0 right-0 mx-auto -top-14 cursor-pointer"
+                  ></button>
+                </div>
+                <div className=" flex justify-center items-center">
+                  <button
+                    onClick={stopCamera}
+                    className="bg-red-600 hover:bg-red-700  rounded-full  text-white font-semibol w-6 h-6 text-center  cursor-pointer"
+                  >
+                    X
+                  </button>
+                </div>
+              </div>
+            </div>
+            s
           </div>
         </div>
 
         {/* Captured Photo Preview */}
         {photo && (
-          <div className="mt-6 text-center w-[95%] lg:w-[400px] h-[80vh]">
+          <div className="mt-6 text-center w-[390px] aspect-9/16 ">
             <h3 className="font-semibold mb-2">Captured Frame:</h3>
             <img
               src={photo}
